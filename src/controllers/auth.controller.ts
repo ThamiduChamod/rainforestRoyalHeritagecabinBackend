@@ -6,8 +6,10 @@ import { OtpModel } from "../models/OTP"
 import { generateOTP } from "../utils/otp"
 import { sendOTPEmail } from "../utils/mailer"
 import { signInAccessToken, signInRefreshToken } from "../utils/token"
+import jwt from "jsonwebtoken"
 dotenv.config()
 
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string
 
 export const sendOTP = async (req: Request, res: Response) =>{
     const {registerEmail} = req.body
@@ -147,3 +149,24 @@ export const logIn = async (req: Request, res: Response) =>{
 
 }
 
+export const handelRefreshToken = async (req: Request, res: Response) =>{
+    try{
+        const {token} = req.body
+
+        if(!token){
+            return res.status(400).json({message: "Token required"})
+        }
+
+        const payLoad = jwt.verify(token, JWT_REFRESH_SECRET)
+        const user = await User.findById(payLoad.sub)
+
+        if(!user){
+            return res.status(403).json({message: "Invalid refresh token"})
+        }
+        const accessToken = signInAccessToken(user)
+        res.status(201).json({accessToken})
+    }catch(err){
+        res.status(403).json({message: "Invalid or expire token"})
+    }
+
+}
