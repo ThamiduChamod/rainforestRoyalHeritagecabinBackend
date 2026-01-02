@@ -3,8 +3,7 @@ import dotenv from 'dotenv'
 import { Role, User } from "../models/User"
 import bcrypt from "bcrypt"
 import { OtpModel } from "../models/OTP"
-import { generateOTP } from "../utils/otp"
-import { sendOTPEmail } from "../utils/mailer"
+import { sendOtp, verifyOtp } from "../utils/otp"
 import { signInAccessToken, signInRefreshToken } from "../utils/token"
 import jwt from "jsonwebtoken"
 dotenv.config()
@@ -15,24 +14,19 @@ export const sendOTP = async (req: Request, res: Response) =>{
     const {registerEmail} = req.body
     const email = registerEmail
     console.log(email)
-
+      
     if (!email) {
         return res.status(400).json({message: "Email Required"})
     }
 
-    await OtpModel.deleteMany({email})
-
-    const otp = generateOTP()
-    const expiresAt = new Date(Date.now() + 2 * 60 * 1000)
-
-    try {
-        await OtpModel.create({email, otp, expiresAt})
-        await sendOTPEmail(email, otp)
-
+    const isSendOTP =await sendOtp(email)
+    
+    if(isSendOTP){
         return res.status(201).json({status: 201, message:"OTP sended"})
-    } catch (error: any) {
-        return res.status(500).json({message: `OTP Send fail ${error}`})
+    }else{
+        return res.status(500).json({message: `OTP Send fail`})
     }
+
 }
 
 export const verifyOTP = async (req: Request,  res: Response) =>{
@@ -42,30 +36,26 @@ export const verifyOTP = async (req: Request,  res: Response) =>{
         return res.status(400).json({isValid: false, message:"Email & OTP Required"})
     }
 
-    try {
-      const record = await OtpModel.findOne({email:email, otp})
-
+    try{
+    const record = await OtpModel.findOne({email:email, otp})
+        
         if(!record){
-            return res.status(400).json({isValid: false, message: "Invalid OTP"})
+          return res.status(400).json({isValid: false, message: "Invalid OTP"})   
         }
-
         if (record.expiresAt < new Date()) {
-            await OtpModel.deleteMany({ email:email });
-            return res.status(400).json({isValid: false, message: "OTP expired" });
+          await OtpModel.deleteMany({ email:email });
+          return res.status(400).json({isValid: false, message: "OTP expired" });
         }
+        const isVerify = await verifyOtp(email, otp)
 
-        // OTP correct → delete it
-        // await OtpModel.deleteMany({ email:email });
-        await OtpModel.findOneAndUpdate(
-            {email,otp},
-            {isValid: true}
-        )
-        res.json({  isValid: true, message: "OTP verified successfully" });
-  
-    } catch (error) {
-        return res.status(500).json({isValid: false, message:`sever error ${error}`})    
-    }
-
+        if(isVerify){
+            return res.status(200).json({  isValid: true, message: "OTP verified successfully" });
+        }else{
+            return res.status(500).json({isValid: false, message:`sever error `})  
+        }
+    }catch(err){
+        return res.status(500).json({isValid: false, message:`sever error `})  
+    }   
 }
 
 export const register = async (req: Request, res: Response) =>{
