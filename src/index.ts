@@ -3,6 +3,8 @@ import cors from "cors"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
 import authRouter from "./routes/auth.routers"
+import adminRouter from './routes/admin.routers'
+import postRouter from './routes/post.routers'
 dotenv.config()
 
 const SEVER_PORT = process.env.SERVER_PORT
@@ -19,6 +21,8 @@ app.use(
 )
 
 app.use("/api/v1/auth",authRouter)
+app.use("/api/v1/ADMIN",adminRouter)
+app.use("api/v1/Post",postRouter)
 
 mongoose
     .connect(MONGO_URI)
