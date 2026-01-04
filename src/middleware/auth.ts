@@ -16,18 +16,22 @@ export const authenticate = (
     next: NextFunction
 ) => {
     const authHeader = req.headers.authorization
-
     if(!authHeader){
         return res.status(401).json({message:"No Token Provide"})
     }
 
-    const token = authHeader.split("")[1] //[Bearer]
+    if (!authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Invalid token format" });
+    }
 
+    const token = authHeader.split(" ")[1] //[Bearer]
     try{
+        
         const payload =jwt.verify(token, JWT_SECRET)
+        console.log(`payload`)
         req.user = payload
         next()
     }catch (err){
-        res.status(403).json({message: "Invalid or expire token"})
+        res.status(401).json({message: "Invalid or expire token"})
     }
 }
