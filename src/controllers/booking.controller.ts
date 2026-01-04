@@ -57,6 +57,29 @@ export const bookRoom = async (req: AuthRequest, res: Response) =>{
     }
 }
 
-export const getMyBooking = async (req: AuthRequest, res: Response) =>{
-    
+    export const getMyBooking = async (req: AuthRequest, res: Response) =>{
+        try {
+    console.log({ user: req.user.sub });
+
+    const booking = await BookingModel.find({
+        user: req.user.sub   
+    });
+
+    if (booking.length === 0) {
+        return res.status(404).json({
+        message: "No bookings found"
+        });
+    }
+
+    res.status(200).json({
+        message: "Get my booking",
+        data: booking
+    });
+
+    } catch (err) {
+        res.status(500).json({
+            message: "Can't get my booking"
+        });
+    }
+
 }
