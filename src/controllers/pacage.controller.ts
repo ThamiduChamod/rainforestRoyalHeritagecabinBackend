@@ -1,12 +1,13 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import { AuthRequest } from "../middleware/auth";
 import cloudinary from "../config/cloudinary";
 import { PackageModel } from "../models/Package";
 
 export const savePackage = async (req: AuthRequest, res: Response) =>{
+    console.log("method run")
     try {
-        if(req.user) {
-            return res.status(401).json({message:"Unauthorized"})
+        if(!req.user) {
+            return res.status(401).json({ isSave: false, message:"Unauthorized"})
         }
 
         const{name, price, tagline, status, features, count} = req.body
@@ -39,15 +40,29 @@ export const savePackage = async (req: AuthRequest, res: Response) =>{
             count
         })
         try {
-            await newPackage.save()
+               await newPackage.save()
             res.status(201).json({
-                 message: "Save Package",
+                isSave: true,
+                message: "Save Package",
                 data: newPackage
             })
         } catch (error) {
-            res.status(500).json({message:`${error}`})
+            res.status(500).json({isSave: false,message:`${error}`})
         }
     } catch (error) {
-        res.status(500).json({message:`${error}`})
+        res.status(500).json({isSave: false, message:`${error}`})
     }
+}
+
+export const getAllPackages = async( req: Request, res: Response) =>{
+    try {
+            const allPackages =await PackageModel.find()
+    
+            res.status(201).json({
+                message:"package data",
+                data: allPackages
+            })
+        } catch (error) {
+            
+        }
 }
