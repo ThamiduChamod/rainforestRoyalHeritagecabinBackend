@@ -1,6 +1,8 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth";
 import { ProfileModel } from "../models/profile";
+import cloudinary from "../config/cloudinary";
+
 
 export const saveProfile = async (req:AuthRequest, res: Response)=>{
     
@@ -35,4 +37,46 @@ console.log("methord 3")
         console.log(error)
         return res.status(500).json({isSave: false,message:"profile save fail"})
     }
+}
+
+export const updatePhoto = async (req:AuthRequest, res: Response) =>{
+    if(!req.user) {
+            return res.status(401).json({isSave: false,message:"Unauthorized"})
+        }
+        try {
+            let imageURL = ''
+            
+            const exitProfile = await ProfileModel.findOne({user:req.user.sub})
+            if(!exitProfile){
+                return res.status(400).json({message:"can't find User"})
+            }
+
+            if(req.file){
+                const result: any = await new Promise((resole, reject) =>{
+                    const upload_stream = cloudinary.uploader.upload_stream(
+                    {folder: "profileImage"},
+                    (error, result) => {
+                        if(error){
+                            console.error("image Not save",error)
+                            return reject(error)
+                        }
+                        resole(result)
+                    }
+                    )
+                    upload_stream.end(req.file?.buffer)
+                })
+                
+                imageURL = result.secure_url
+                console.log(imageURL)
+            }
+
+            exitProfile.image = imageURL
+
+            await exitProfile.save()
+
+            res.status(200).json({message:"image upload successfully"})
+
+        } catch (error) {
+            res.status(400).json({message:"image upload fail"})
+        }
 }
