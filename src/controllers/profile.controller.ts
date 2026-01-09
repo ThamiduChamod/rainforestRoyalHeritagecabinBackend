@@ -8,20 +8,30 @@ export const saveProfile = async (req:AuthRequest, res: Response)=>{
     
     try {
         if(!req.user.sub){
-            return res.status(400).json({message:"Unauthorized"})
+            return res.status(400).json({isSave: false, message:"Unauthorized"})
         }
-console.log("methord 1")
-        const exitProfile = await ProfileModel.findOne({user:req.user.sub})
-        if(exitProfile){
-            return res.status(400).json({message:"User already"})
-        }
-console.log("methord 2")
+console.log("method 2")
         const {address, phone, country} = req.body
 
         if(!address || !phone || !country){
-            return res.status(400).json({message:"All are require"})
+            return res.status(400).json({isSave: false, message:"All are require"})
         }
-console.log("methord 3")        
+console.log("method 1")
+        const exitProfile = await ProfileModel.findOne({user:req.user.sub})
+        if(exitProfile){
+
+            exitProfile.address = address
+            exitProfile.phone = phone
+            exitProfile.country= country
+
+            exitProfile.save()
+
+            res.status(200).json({ isSave: true, message:"User Profile update successfully"})
+            return
+        }
+
+        
+console.log("method 3")        
         const profile = new ProfileModel({
             user:req.user.sub,
             image:'',
@@ -32,7 +42,7 @@ console.log("methord 3")
 
         await profile.save()
 
-        res.status(200).json({isSave: true,message:"profile save"})
+        res.status(200).json({isSave: true,message:"User profile save successfully"})
     } catch (error) {
         console.log(error)
         return res.status(500).json({isSave: false,message:"profile save fail"})
@@ -48,7 +58,8 @@ export const updatePhoto = async (req:AuthRequest, res: Response) =>{
             
             const exitProfile = await ProfileModel.findOne({user:req.user.sub})
             if(!exitProfile){
-                return res.status(400).json({message:"can't find User"})
+                res.status(400).json({message:"First add other details"})
+                return
             }
 
             if(req.file){
@@ -74,7 +85,7 @@ export const updatePhoto = async (req:AuthRequest, res: Response) =>{
 
             await exitProfile.save()
 
-            res.status(200).json({message:"image upload successfully"})
+            res.status(200).json({ isSave:true, image: imageURL, message:"image upload successfully"})
 
         } catch (error) {
             res.status(400).json({message:"image upload fail"})
