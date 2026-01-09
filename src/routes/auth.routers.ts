@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { getMyDetails, handelRefreshToken, logIn, register, sendOTP, verifyOTP } from "../controllers/auth.controller"
+import { getMyDetails, handelRefreshToken, logIn, register, sendMail, sendOTP, verifyOTP } from "../controllers/auth.controller"
 import { authenticate } from "../middleware/auth"
 
 
@@ -12,6 +12,7 @@ router.post("/verifyOTP",verifyOTP)
 router.post("/logIn", logIn)
 router.post("/refresh", handelRefreshToken)
 router.get("/me", authenticate, getMyDetails)
+router.post("/sendEmail", sendMail)
 
 
 export default router

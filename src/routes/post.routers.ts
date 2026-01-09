@@ -3,7 +3,7 @@ import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/role";
 import { Role } from "../models/User";
 import { deleteRoom, getAllRooms, saveRoom, updateRoom } from "../controllers/rooms.controller";
-import {  getAllPackages, savePackage, updatePackage } from "../controllers/pacage.controller";
+import {  deletePackage, getAllPackages, savePackage, updatePackage } from "../controllers/pacage.controller";
 import { upload } from "../middleware/upload";
 
 const route = Router()
@@ -49,6 +49,13 @@ route.post(
     requireRole([Role.ADMIN, Role.AUTHOR]),
     upload.single("image"),
     updatePackage
+)
+
+route.post(
+    "deletePackage",
+    authenticate,
+    requireRole([Role.ADMIN, Role.AUTHOR]),
+    deletePackage
 )
 
 route.get(

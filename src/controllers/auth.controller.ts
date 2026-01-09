@@ -7,6 +7,7 @@ import { sendOtp, verifyOtp } from "../utils/otp"
 import { signInAccessToken, signInRefreshToken } from "../utils/token"
 import jwt from "jsonwebtoken"
 import { AuthRequest } from "../middleware/auth"
+import { sendEmail } from "../utils/mailer"
 dotenv.config()
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string
@@ -199,4 +200,19 @@ export const getMyDetails = async (req: AuthRequest, res: Response) => {
     message: "Ok",
     data: { firstName, lastName, email, roles }
   })
+}
+
+export const sendMail = async(req: Request, res: Response) =>{
+    console.log("method run 1")
+    console.log( req.body)
+    const {name, email, subject, message} = req.body
+    console.log("method run")
+    try {
+        const isSend = await sendEmail(email, name, subject, message)
+
+        res.status(200).json({isSend:true, message:"Email send"})
+    } catch (error) {
+        res.status(200).json({isSend:false, message:"Email send fail"})
+    }
+    
 }

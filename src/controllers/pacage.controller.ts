@@ -119,3 +119,15 @@ export const updatePackage = async (req:AuthRequest,  res: Response) =>{
         });
     }
 }
+
+export const deletePackage = async (req:AuthRequest, res: Response) =>{
+    console.log("method run")
+        try {
+             const { id } = req.body
+             console.log(id)
+            await PackageModel.deleteOne({_id:id})
+            res.status(200).json({isDelete: true, message:"delete successfully"})
+        } catch (error) {
+            res.status(500).json({isDelete: true,message:"can't delete"})
+        }
+}
